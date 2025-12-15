@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 
+// Use server-side backend URL (avoid NEXT_PUBLIC_BACKEND_URL pointing to the Next app itself)
 const BACKEND_URL =
-  process.env.BACKEND_URL || 'http://localhost:4000';
+  process.env.NEXT_API_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  'http://localhost:4000';
 
 export async function POST(request: Request) {
   try {
