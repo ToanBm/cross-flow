@@ -38,7 +38,7 @@ export async function verifyTransferTransaction(
 }> {
   try {
     // Dùng raw RPC call để tránh ethers parse sai Tempo AA receipt (type 0x76)
-    const rawReceipt = await provider.send('eth_getTransactionReceipt', [txHash]);
+    const rawReceipt = await (provider as any).send('eth_getTransactionReceipt', [txHash]);
 
     if (!rawReceipt) {
       throw new Error('Transaction not found');
@@ -201,7 +201,7 @@ export async function transferUSDTFromOfframp(
         );
       }
 
-      const tx = await contractWithSigner.transfer(to, amountWei);
+      const tx = await (contractWithSigner as any).transfer(to, amountWei);
       return tx;
     } catch (error: any) {
       lastError = error;

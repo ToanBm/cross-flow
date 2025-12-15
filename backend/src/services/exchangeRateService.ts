@@ -110,7 +110,7 @@ async function fetchUSDTtoVND(): Promise<number> {
       throw new Error(`CoinGecko API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     const rate = data.tether?.vnd;
 
     if (!rate || rate <= 0) {
@@ -142,7 +142,7 @@ async function fetchUSDTtoUSD(): Promise<number> {
       throw new Error(`CoinGecko API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     const rate = data.tether?.usd;
 
     if (!rate || rate <= 0) {
@@ -174,7 +174,7 @@ async function fetchUSDTtoEUR(): Promise<number> {
       throw new Error(`CoinGecko API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     const rate = data.tether?.eur;
 
     if (!rate || rate <= 0) {
@@ -244,9 +244,9 @@ export async function getExchangeRate(
     // For other pairs, try to use cached value even if expired
     if (cached) {
       console.warn(
-        `Using expired cached rate: ${from} → ${to} = ${cached.rate}`
+        `Using expired cached rate: ${from} → ${to} = ${(cached as any).rate}`
       );
-      return cached.rate;
+      return (cached as any).rate;
     }
 
     throw new Error(

@@ -8,7 +8,7 @@ let stripe: Stripe | null = null;
 
 if (process.env.STRIPE_SECRET_KEY) {
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2024-11-20.acacia',
+    apiVersion: '2024-11-20.acacia' as any,
   });
 } else {
   // Don't warn here - will be checked in getStripe()
@@ -23,7 +23,7 @@ export function getStripe(): Stripe {
     // Try to initialize if not already done
     if (process.env.STRIPE_SECRET_KEY) {
       stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2024-11-20.acacia',
+        apiVersion: '2024-11-20.acacia' as any,
       });
     } else {
       throw new Error('STRIPE_SECRET_KEY is not configured');

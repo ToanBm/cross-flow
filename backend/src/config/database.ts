@@ -1,4 +1,6 @@
+// @ts-ignore - pg types may not be available
 import { Pool } from 'pg';
+// @ts-ignore - better-sqlite3 types may not be available
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';

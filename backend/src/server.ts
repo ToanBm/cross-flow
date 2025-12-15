@@ -26,7 +26,7 @@ dotenv.config();
 initializeDatabase();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '4000', 10);
 
 // Trust proxy - Required when behind reverse proxy (ngrok, load balancer, etc.)
 // Only trust first proxy (ngrok) for security
