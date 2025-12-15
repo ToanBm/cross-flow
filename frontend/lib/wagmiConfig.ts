@@ -19,11 +19,26 @@ const tempoRpcUrl = process.env.NEXT_PUBLIC_TEMPO_RPC_URL || '';
 const feePayerUrl =
   process.env.NEXT_PUBLIC_TEMPO_FEE_PAYER_URL || 'http://localhost:3100';
 
+// Get RP ID from environment or use current hostname
+const getRpId = (): string | undefined => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // For localhost, use 'localhost' directly
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'localhost';
+    }
+    // For production, use the hostname (e.g., toanbm.xyz)
+    return hostname;
+  }
+  return undefined;
+};
+
 export const wagmiConfig = createConfig({
   chains: [tempoChain],
   connectors: [
     webAuthn({
       keyManager: httpKeyManager,
+      rpId: getRpId(),
     }),
   ],
   multiInjectedProviderDiscovery: false,
