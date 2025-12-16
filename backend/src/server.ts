@@ -88,19 +88,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Webhook route - raw body will be saved via verify callback in express.json()
-app.post('/api/webhooks/stripe', webhookController.handleStripeWebhook);
-
-// GET endpoint for webhook URL (for testing/verification)
-app.get('/api/webhooks/stripe', (req, res) => {
-  res.json({ 
-    message: 'Webhook endpoint is active. This endpoint only accepts POST requests from Stripe.',
-    method: 'POST',
-    url: '/api/webhooks/stripe'
-  });
-});
-
 // JSON parsing middleware with verify callback to save raw body for webhooks
+// MUST be before webhook route so rawBody is captured
 app.use(express.json({
   limit: '5mb',
   verify: (req: any, res, buf) => {
@@ -112,6 +101,18 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: true }));
+
+// Webhook route - AFTER express.json() so rawBody is captured via verify callback
+app.post('/api/webhooks/stripe', webhookController.handleStripeWebhook);
+
+// GET endpoint for webhook URL (for testing/verification)
+app.get('/api/webhooks/stripe', (req, res) => {
+  res.json({ 
+    message: 'Webhook endpoint is active. This endpoint only accepts POST requests from Stripe.',
+    method: 'POST',
+    url: '/api/webhooks/stripe'
+  });
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
