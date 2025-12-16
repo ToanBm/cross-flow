@@ -32,10 +32,54 @@ export const provider = (() => {
   return new ethers.FallbackProvider(providers as any);
 })();
 
-// USDC Contract Address trên Tempo
-export const usdtContractAddress =
-  process.env.TEMPO_USDC_CONTRACT_ADDRESS ||
+// Token Contract Addresses trên Tempo
+// Individual token addresses (recommended)
+const ALPHAUSD_CONTRACT_ADDRESS =
+  process.env.TEMPO_ALPHAUSD_CONTRACT_ADDRESS ||
+  process.env.TEMPO_USDC_CONTRACT_ADDRESS || // Legacy support
   '0x20c0000000000000000000000000000000000001';
+
+const BETAUSD_CONTRACT_ADDRESS =
+  process.env.TEMPO_BETAUSD_CONTRACT_ADDRESS ||
+  '0x20c0000000000000000000000000000000000002';
+
+const THETAUSD_CONTRACT_ADDRESS =
+  process.env.TEMPO_THETAUSD_CONTRACT_ADDRESS ||
+  '0x20c0000000000000000000000000000000000003';
+
+// Legacy: USDC/USDT Contract Address (defaults to AlphaUSD)
+export const usdtContractAddress = ALPHAUSD_CONTRACT_ADDRESS;
+
+// Token address mapping by symbol
+const TOKEN_ADDRESSES: Record<string, string> = {
+  AlphaUSD: ALPHAUSD_CONTRACT_ADDRESS,
+  BetaUSD: BETAUSD_CONTRACT_ADDRESS,
+  ThetaUSD: THETAUSD_CONTRACT_ADDRESS,
+};
+
+/**
+ * Get token contract address by symbol
+ * @param tokenSymbol - Token symbol (AlphaUSD, BetaUSD, ThetaUSD)
+ * @returns Token contract address
+ */
+export function getTokenAddress(tokenSymbol: string): string {
+  const normalizedSymbol = tokenSymbol.trim();
+  const address = TOKEN_ADDRESSES[normalizedSymbol];
+  
+  if (!address) {
+    console.warn(`Token address not found for ${tokenSymbol}, using AlphaUSD default`);
+    return ALPHAUSD_CONTRACT_ADDRESS;
+  }
+  
+  return address;
+}
+
+/**
+ * Get all configured token addresses
+ */
+export function getAllTokenAddresses(): Record<string, string> {
+  return { ...TOKEN_ADDRESSES };
+}
 
 // Wallets
 export const offrampWallet = process.env.OFFRAMP_PRIVATE_KEY

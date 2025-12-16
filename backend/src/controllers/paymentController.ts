@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { createPayment, updatePayment, getPaymentByPaymentIntentId, getPaymentHistoryByWallet } from '../services/paymentService';
 import { createPaymentIntent, getPaymentIntent, getExchangeRate } from '../utils/stripe';
-import { transferUSDTFromOfframp, getOfframpBalance, isValidAddress } from '../utils/blockchain';
+import { getOfframpBalance, isValidAddress } from '../utils/blockchain';
+import { getTokenAddress } from '../config/blockchain';
 import { Payment } from '../models/Payment';
 
 /**
@@ -10,7 +11,7 @@ import { Payment } from '../models/Payment';
  */
 export async function createPaymentIntentHandler(req: Request, res: Response) {
   try {
-    const { amount, currency, walletAddress } = req.body;
+    const { amount, currency, walletAddress, token_symbol, token_address, fiat_amount } = req.body;
 
     // Validation
     if (!walletAddress || !isValidAddress(walletAddress)) {
@@ -25,36 +26,38 @@ export async function createPaymentIntentHandler(req: Request, res: Response) {
       return res.status(400).json({ error: 'Invalid currency. Supported: usd, eur' });
     }
 
-    // Get exchange rate (Fiat → USDT)
-    // Service returns USDT → Fiat, so we need to invert it
+    if (!token_symbol) {
+      return res.status(400).json({ error: 'token_symbol is required' });
+    }
+
+    // Get token address from request or from config
+    const finalTokenAddress = token_address || getTokenAddress(token_symbol);
+
+    // amount is now in stablecoin (AlphaUSD/BetaUSD/ThetaUSD)
+    const stablecoinAmount = parseFloat(amount);
+    
+    // Get exchange rate (Fiat → Stablecoin)
+    // Service returns USDT → Fiat, so we need to invert it (assuming stablecoins ≈ USDT for now)
     let exchangeRate = 1.0;
     try {
       const usdtToFiatRate = await getExchangeRate('usdt', currency.toLowerCase());
-      // Invert: if 1 USDT = X Fiat, then 1 Fiat = 1/X USDT
+      // Invert: if 1 USDT = X Fiat, then 1 Fiat = 1/X USDT (or stablecoin)
       exchangeRate = 1 / usdtToFiatRate;
     } catch (error) {
       console.warn('Failed to get exchange rate, using 1:1:', error);
     }
 
-    const amountUSDT = parseFloat(amount) * exchangeRate;
+    // Calculate fiat amount from stablecoin amount (or use provided fiat_amount)
+    const fiatAmount = fiat_amount ? parseFloat(fiat_amount) : (stablecoinAmount / exchangeRate);
 
-    // Validate maximum amount: 5 USDT limit
-    if (amountUSDT > 5) {
-      return res.status(400).json({
-        error: 'Maximum purchase limit is 5 USDT',
-        maxAmount: '5',
-        requested: amountUSDT.toFixed(6),
-      });
-    }
-
-    // Check offramp wallet balance
+    // Check offramp wallet balance for the specific token
     try {
-      const offrampBalance = await getOfframpBalance();
-      if (parseFloat(offrampBalance) < amountUSDT) {
+      const offrampBalance = await getOfframpBalance(finalTokenAddress);
+      if (parseFloat(offrampBalance) < stablecoinAmount) {
         return res.status(400).json({
-          error: 'Insufficient balance in offramp wallet',
+          error: `Insufficient ${token_symbol} balance in offramp wallet`,
           available: offrampBalance,
-          required: amountUSDT.toFixed(6),
+          required: stablecoinAmount.toFixed(6),
         });
       }
     } catch (error: any) {
@@ -62,13 +65,15 @@ export async function createPaymentIntentHandler(req: Request, res: Response) {
       // Continue anyway, will check again when processing
     }
 
-    // Create Stripe Payment Intent
+    // Create Stripe Payment Intent with calculated fiat amount
     const paymentIntent = await createPaymentIntent({
-      amount: parseFloat(amount),
+      amount: fiatAmount,
       currency: currency.toLowerCase() as 'usd' | 'eur',
       walletAddress,
       metadata: {
-        amount_usdt: amountUSDT.toFixed(6),
+        amount_stablecoin: stablecoinAmount.toFixed(6),
+        token_symbol: token_symbol,
+        token_address: finalTokenAddress,
         exchange_rate: exchangeRate.toString(),
       },
     });
@@ -77,9 +82,9 @@ export async function createPaymentIntentHandler(req: Request, res: Response) {
     const payment = await createPayment({
       payment_intent_id: paymentIntent.id,
       wallet_address: walletAddress,
-      amount_fiat: amount,
+      amount_fiat: fiatAmount.toString(),
       fiat_currency: currency.toLowerCase(),
-      amount_usdt: amountUSDT.toFixed(6),
+      amount_usdt: stablecoinAmount.toFixed(6), // Store stablecoin amount in amount_usdt field (legacy field name)
       exchange_rate: exchangeRate.toString(),
       status: 'pending',
     });
@@ -87,9 +92,10 @@ export async function createPaymentIntentHandler(req: Request, res: Response) {
     res.json({
       paymentIntentId: paymentIntent.id,
       clientSecret: paymentIntent.client_secret,
-      amount: parseFloat(amount),
+      amount: fiatAmount,
       currency: currency.toLowerCase(),
-      amountUSDT: amountUSDT.toFixed(6),
+      amountStablecoin: stablecoinAmount.toFixed(6),
+      tokenSymbol: token_symbol,
       exchangeRate: exchangeRate.toString(),
       walletAddress,
       status: 'pending',
@@ -203,52 +209,47 @@ export async function getOfframpBalanceHandler(req: Request, res: Response) {
 }
 
 /**
- * GET /api/payment/exchange-rate?currency=USD
- * Get exchange rate (Fiat → USDT) for display
+ * GET /api/payment/exchange-rate?currency=USD&token_symbol=AlphaUSD
+ * Get exchange rate (Fiat → Stablecoin) for display
  */
 export async function getExchangeRateHandler(req: Request, res: Response) {
   try {
-    const { currency } = req.query;
-    console.log(`[Exchange Rate Handler] Request for currency: ${currency}`);
+    const { currency, token_symbol } = req.query;
 
     if (!currency || !['usd', 'eur'].includes((currency as string).toLowerCase())) {
-      console.warn(`[Exchange Rate Handler] Invalid currency: ${currency}`);
       return res.status(400).json({ error: 'Invalid currency. Supported: usd, eur' });
     }
 
     const currencyLower = (currency as string).toLowerCase();
     const currencyUpper = currency.toString().toUpperCase();
+    const tokenSymbol = (token_symbol as string)?.trim() || 'USDT'; // Default to USDT if not provided
     
-    // Get exchange rate (Fiat → USDT)
+    // Get exchange rate (Fiat → Stablecoin)
     // Service returns USDT → Fiat, so we need to invert it
+    // Note: Stablecoins (AlphaUSD/BetaUSD/ThetaUSD) are pegged to USD/EUR, so we use USDT rate as proxy
     let exchangeRate = 1.0;
     try {
-      console.log(`[Exchange Rate Handler] Fetching USDT → ${currencyLower} rate...`);
       const usdtToFiatRate = await getExchangeRate('usdt', currencyLower);
-      console.log(`[Exchange Rate Handler] Got USDT → ${currencyLower} rate: ${usdtToFiatRate}`);
       
       // Ensure usdtToFiatRate is a valid non-zero number before inverting
-      if (typeof usdtToFiatRate === 'number' && !isNaN(usdtToFiatRate) && usdtToFiatRate > 0) {
+      if (typeof usdtToFiatRate === 'number' && !isNaN(usdtToFiatRate) && usdtToFiatRate > 0 && isFinite(usdtToFiatRate)) {
         exchangeRate = 1 / usdtToFiatRate;
-        console.log(`[Exchange Rate Handler] Calculated ${currencyUpper} → USDT rate: ${exchangeRate}`);
       } else {
         console.warn(`[Exchange Rate Handler] Invalid usdtToFiatRate (${usdtToFiatRate}), using 1:1`);
         exchangeRate = 1.0; // Fallback to 1:1
       }
     } catch (error: any) {
       console.error('[Exchange Rate Handler] Failed to get exchange rate:', error);
-      console.warn('[Exchange Rate Handler] Using fallback 1:1 rate');
       exchangeRate = 1.0; // Fallback to 1:1 on error
     }
     const response = {
       from: currencyUpper,
-      to: 'USDT',
+      to: tokenSymbol,
       rate: exchangeRate,
       // Also return USDT to Fiat rate for reference (avoid division by zero)
       usdtToFiatRate: exchangeRate > 0 ? 1 / exchangeRate : 1,
     };
     
-    console.log(`[Exchange Rate Handler] Sending response:`, response);
     res.json(response);
   } catch (error: any) {
     console.error('[Exchange Rate Handler] Error getting exchange rate:', error);

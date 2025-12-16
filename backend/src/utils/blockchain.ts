@@ -4,6 +4,7 @@ import {
   getUSDTContract,
   offrampWallet,
   usdtContractAddress,
+  usdtAbi,
 } from '../config/blockchain';
 
 /**
@@ -17,6 +18,20 @@ export async function getUSDTBalance(address: string): Promise<string> {
     return ethers.formatUnits(balance, decimals);
   } catch (error) {
     throw new Error(`Failed to get USDT balance: ${error}`);
+  }
+}
+
+/**
+ * Get token balance of an address by token address
+ */
+export async function getTokenBalance(address: string, tokenAddress: string): Promise<string> {
+  try {
+    const contract = new ethers.Contract(tokenAddress, usdtAbi, provider);
+    const balance = await contract.balanceOf(address);
+    const decimals = await contract.decimals();
+    return ethers.formatUnits(balance, decimals);
+  } catch (error) {
+    throw new Error(`Failed to get token balance: ${error}`);
   }
 }
 
@@ -172,12 +187,13 @@ export function getOfframpAddress(): string {
 }
 
 /**
- * Transfer USDT from offramp wallet to user wallet (for on-ramp)
+ * Transfer token from offramp wallet to user wallet (for on-ramp)
  * This is called when payment_intent.succeeded webhook is received
  */
-export async function transferUSDTFromOfframp(
+export async function transferTokenFromOfframp(
   to: string,
   amount: string,
+  tokenAddress: string,
   maxRetries: number = 3
 ): Promise<ethers.ContractTransactionResponse> {
   if (!offrampWallet) {
@@ -188,7 +204,8 @@ export async function transferUSDTFromOfframp(
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const contract = getUSDTContract();
+      // Get token contract by address
+      const contract = new ethers.Contract(tokenAddress, usdtAbi, provider);
       const contractWithSigner = contract.connect(offrampWallet);
       const decimals = await contract.decimals();
       const amountWei = ethers.parseUnits(amount, decimals);
@@ -197,7 +214,7 @@ export async function transferUSDTFromOfframp(
       const balance = await contract.balanceOf(offrampWallet.address);
       if (balance < amountWei) {
         throw new Error(
-          `Insufficient balance in offramp wallet. Required: ${ethers.formatUnits(amountWei, decimals)} USDT, Available: ${ethers.formatUnits(balance, decimals)} USDT`
+          `Insufficient balance in offramp wallet. Required: ${ethers.formatUnits(amountWei, decimals)}, Available: ${ethers.formatUnits(balance, decimals)}`
         );
       }
 
@@ -226,23 +243,38 @@ export async function transferUSDTFromOfframp(
       }
       
       // Don't retry on non-retryable errors (insufficient balance, invalid address, etc.)
-      throw new Error(`Failed to transfer USDT from offramp wallet: ${error.message}`);
+      throw new Error(`Failed to transfer token from offramp wallet: ${error.message}`);
     }
   }
   
-  throw new Error(`Failed to transfer USDT from offramp wallet after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
+  throw new Error(`Failed to transfer token from offramp wallet after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
 }
 
 /**
- * Get offramp wallet USDT balance
+ * Transfer USDT from offramp wallet to user wallet (for on-ramp) - Legacy function
+ * @deprecated Use transferTokenFromOfframp instead
  */
-export async function getOfframpBalance(): Promise<string> {
+export async function transferUSDTFromOfframp(
+  to: string,
+  amount: string,
+  maxRetries: number = 3
+): Promise<ethers.ContractTransactionResponse> {
+  // Use AlphaUSD address (0x20c0000000000000000000000000000000000001) as default
+  return transferTokenFromOfframp(to, amount, usdtContractAddress, maxRetries);
+}
+
+/**
+ * Get offramp wallet balance for a specific token
+ * @param tokenAddress - Token contract address (optional, defaults to usdtContractAddress for backward compatibility)
+ */
+export async function getOfframpBalance(tokenAddress?: string): Promise<string> {
   if (!offrampWallet) {
     throw new Error('Offramp wallet not configured');
   }
 
   try {
-    return await getUSDTBalance(offrampWallet.address);
+    const tokenAddr = tokenAddress || usdtContractAddress;
+    return await getTokenBalance(offrampWallet.address, tokenAddr);
   } catch (error) {
     throw new Error(`Failed to get offramp wallet balance: ${error}`);
   }

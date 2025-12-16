@@ -81,8 +81,21 @@ DATABASE_URL=postgresql://user:password@localhost:5432/crossflow
 # Blockchain (Tempo Testnet)
 TEMPO_RPC_URL=https://tempo-testnet.rpc.thirdweb.com
 TEMPO_RPC_URLS=https://tempo-testnet.rpc.thirdweb.com,https://tempo-testnet.rpc.thirdweb.com/backup
+
+# Token Contract Addresses (configure in .env)
+# Legacy: TEMPO_USDC_CONTRACT_ADDRESS (defaults to AlphaUSD)
 TEMPO_USDC_CONTRACT_ADDRESS=0x20c0000000000000000000000000000000000001
+
+# Individual token addresses (recommended)
+TEMPO_ALPHAUSD_CONTRACT_ADDRESS=0x20c0000000000000000000000000000000000001
+TEMPO_BETAUSD_CONTRACT_ADDRESS=0x20c0000000000000000000000000000000000002
+TEMPO_THETAUSD_CONTRACT_ADDRESS=0x20c0000000000000000000000000000000000003
+
 OFFRAMP_PRIVATE_KEY=your_offramp_wallet_private_key
+
+# Tempo Fee Payer (Sponsor Gas) - Separate server on port 3100
+TEMPO_FEE_PAYER_PRIVATE_KEY=your_fee_payer_wallet_private_key
+TEMPO_FEE_PAYER_PORT=3100
 
 # Stripe
 STRIPE_SECRET_KEY=sk_live_...
@@ -122,10 +135,29 @@ psql -U crossflow_user -d crossflow -f src/config/database.sql
 
 ## Step 3: Run with PM2
 
+### Start Main Backend Server (port 4000)
+
 ```bash
 # Start the application
 pm2 start dist/server.js --name crossflow-backend
 
+# View logs
+pm2 logs crossflow-backend
+```
+
+### Start Tempo Fee Payer Server (port 3100)
+
+```bash
+# Start fee payer server (for sponsoring gas fees)
+pm2 start dist/tempoFeePayerServer.js --name tempo-fee-payer
+
+# View logs
+pm2 logs tempo-fee-payer
+```
+
+### PM2 Management
+
+```bash
 # Save PM2 configuration
 pm2 save
 
@@ -133,11 +165,14 @@ pm2 save
 pm2 startup
 # Follow the instructions shown
 
-# View logs
-pm2 logs crossflow-backend
+# View all processes
+pm2 list
 
-# Monitor
+# Monitor all
 pm2 monit
+
+# Restart all
+pm2 restart all
 ```
 
 ## Step 4: Configure nginx (Reverse Proxy)
@@ -229,7 +264,14 @@ tail -f combined.log
 ### Restart Application
 
 ```bash
+# Restart main backend
 pm2 restart crossflow-backend
+
+# Restart fee payer server
+pm2 restart tempo-fee-payer
+
+# Or restart all
+pm2 restart all
 ```
 
 ### Update Application

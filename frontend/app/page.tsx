@@ -251,15 +251,21 @@ const InnerApp: React.FC = () => {
     refetchInterval: 15000,
   });
 
-  // Fetch exchange rate for deposit currency
+  // Fetch exchange rate for deposit currency and selected token
   const { data: exchangeRateData } = useQuery({
-    queryKey: ['exchange-rate', depositCurrency],
+    queryKey: ['exchange-rate', depositCurrency, selectedToken],
     queryFn: async () => {
-      const resp = await fetch(`/api/payment/exchange-rate?currency=${depositCurrency.toLowerCase()}`);
-      if (!resp.ok) throw new Error('Failed to fetch exchange rate');
-      return resp.json() as Promise<{ from: string; to: string; rate: number }>;
+      const resp = await fetch(`/api/payment/exchange-rate?currency=${depositCurrency.toLowerCase()}&token_symbol=${selectedToken}`);
+      if (!resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        console.error('[Frontend] Failed to fetch exchange rate:', resp.status, errorData);
+        throw new Error(`Failed to fetch exchange rate: ${resp.status}`);
+      }
+      const data = await resp.json() as { from: string; to: string; rate: number };
+      return data;
     },
     refetchInterval: 60000, // Refetch every minute
+    retry: 2, // Retry 2 times on failure
   });
 
   const { data: offrampInfo } = useQuery({
@@ -578,13 +584,22 @@ const InnerApp: React.FC = () => {
 
     try {
       setIsLoading(true);
+      
+      // Calculate fiat amount from stablecoin amount
+      const stablecoinAmount = parseFloat(amount);
+      const exchangeRate = exchangeRateData?.rate || 1.0;
+      const fiatAmount = stablecoinAmount / exchangeRate;
+
       const resp = await fetch('/api/payment/create-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: parseFloat(amount),
+          amount: stablecoinAmount, // Amount in stablecoin
           currency: depositCurrency.toLowerCase(),
           walletAddress: address,
+          token_symbol: selectedToken,
+          token_address: TOKEN_ADDRESSES[selectedToken],
+          fiat_amount: fiatAmount, // Calculated USD/EUR amount
         }),
       });
 
@@ -617,26 +632,27 @@ const InnerApp: React.FC = () => {
       }
 
       setNotification({
-        msg: `Payment ${paymentIntentId} succeeded. Waiting for USDC transfer from treasury...`,
+        msg: `Payment ${paymentIntentId} succeeded. Waiting for ${selectedToken} transfer from treasury...`,
         type: 'success',
       });
 
       // Log activity to backend (tx_hash will be updated by backend webhook later)
       if (address && paymentIntentId) {
         try {
+          const fiatAmount = stablecoinAmount / (exchangeRateData?.rate || 1.0);
           await fetch('/api/activity-history/log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               wallet_address: address,
               activity_type: 'deposit',
-              token_symbol: depositCurrency.toLowerCase() === 'usd' ? 'USDC' : 'EURC',
-              amount: parseFloat(amount),
-              amount_fiat: parseFloat(amount),
+              token_symbol: selectedToken,
+              amount: stablecoinAmount,
+              amount_fiat: fiatAmount,
               currency: depositCurrency.toUpperCase(),
               to_address: address,
               payment_intent_id: paymentIntentId,
-              status: 'pending', // Will be updated to 'success' when backend transfers USDC
+              status: 'pending', // Will be updated to 'success' when backend transfers token
             }),
           }).catch((err) => {
             console.log('[Log activity] Error:', err);
@@ -974,6 +990,8 @@ const InnerApp: React.FC = () => {
           onBack={() => setCurrentView(AppView.DASHBOARD)}
           depositCurrency={depositCurrency}
           setDepositCurrency={setDepositCurrency}
+          selectedToken={selectedToken}
+          setSelectedToken={setSelectedToken}
           exchangeRate={exchangeRateData?.rate}
           amount={amount}
           setAmount={setAmount}

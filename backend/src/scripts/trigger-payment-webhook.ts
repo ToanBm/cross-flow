@@ -11,7 +11,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 import { getPaymentIntent } from '../utils/stripe';
 import { getPaymentByPaymentIntentId, updatePayment } from '../services/paymentService';
-import { transferUSDTFromOfframp, waitForTransaction } from '../utils/blockchain';
+import { transferTokenFromOfframp, waitForTransaction } from '../utils/blockchain';
+import { getTokenAddress } from '../config/blockchain';
 import type Stripe from 'stripe';
 
 async function triggerPaymentWebhook(paymentIntentId: string) {
@@ -59,13 +60,24 @@ async function triggerPaymentWebhook(paymentIntentId: string) {
       throw new Error('Wallet address not found in payment intent metadata');
     }
 
-    console.log(`\n💸 Transferring ${payment.amount_usdt} USDT to ${walletAddress}...`);
+    // Get token info from metadata
+    const tokenSymbol = paymentIntent.metadata?.token_symbol || 'AlphaUSD';
+    let tokenAddress = paymentIntent.metadata?.token_address;
+    
+    if (!tokenAddress) {
+      // Fallback: get from config by token symbol
+      tokenAddress = getTokenAddress(tokenSymbol);
+      console.log(`   Token address not in metadata, using config: ${tokenAddress}`);
+    }
 
-    // Transfer USDT from offramp wallet to user wallet
+    console.log(`\n💸 Transferring ${payment.amount_usdt} ${tokenSymbol} to ${walletAddress}...`);
+    console.log(`   Token Address: ${tokenAddress}`);
+
+    // Transfer token from offramp wallet to user wallet
     // Convert amount to string if needed
-    const amountUSDT = typeof payment.amount_usdt === 'string' 
+    const amountStablecoin = typeof payment.amount_usdt === 'string' 
       ? payment.amount_usdt 
-      : payment.amount_usdt.toString();
+      : String(payment.amount_usdt);
     
     // Retry logic for RPC errors
     let tx;
@@ -75,7 +87,7 @@ async function triggerPaymentWebhook(paymentIntentId: string) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`   Attempt ${attempt}/${maxRetries}...`);
-        tx = await transferUSDTFromOfframp(walletAddress, amountUSDT);
+        tx = await transferTokenFromOfframp(walletAddress, amountStablecoin, tokenAddress);
         console.log(`✅ Transaction created: ${tx.hash}`);
         break;
       } catch (error: any) {
@@ -111,7 +123,7 @@ async function triggerPaymentWebhook(paymentIntentId: string) {
     // Update payment with transaction hash
     await updatePayment(payment.id!, {
       tx_hash: receipt.hash,
-      block_number: receipt.blockNumber.toString(),
+      block_number: receipt.blockNumber || undefined,
       status: 'completed',
       completed_at: new Date(),
     });
@@ -121,7 +133,7 @@ async function triggerPaymentWebhook(paymentIntentId: string) {
     console.log(`   TX Hash: ${receipt.hash}`);
     console.log(`   Block: ${receipt.blockNumber}`);
     console.log(`   Wallet: ${walletAddress}`);
-    console.log(`   Amount: ${payment.amount_usdt} USDT`);
+    console.log(`   Amount: ${payment.amount_usdt} ${tokenSymbol}`);
 
   } catch (error: any) {
     console.error('\n❌ Error:', error.message);

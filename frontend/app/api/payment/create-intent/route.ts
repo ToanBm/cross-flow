@@ -9,7 +9,7 @@ const BACKEND_URL =
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { amount, currency, walletAddress } = body ?? {};
+    const { amount, currency, walletAddress, token_symbol, token_address, fiat_amount } = body ?? {};
 
     if (!walletAddress || typeof walletAddress !== 'string') {
       return NextResponse.json(
@@ -39,6 +39,9 @@ export async function POST(request: Request) {
           amount,
           currency: fiatCurrency,
           walletAddress,
+          token_symbol,
+          token_address,
+          fiat_amount,
         }),
       },
     );
