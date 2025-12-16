@@ -52,7 +52,7 @@ echo "📝 Step 2: Forward webhook to localhost"
 echo ""
 echo "In the next step, Stripe CLI will:"
 echo "  1. Listen for webhook events from Stripe"
-echo "  2. Forward them to: http://localhost:3000/api/webhooks/stripe"
+echo "  2. Forward them to: http://localhost:4000/api/webhooks/stripe"
 echo "  3. Display a webhook signing secret (starts with whsec_)"
 echo ""
 echo "⚠️  IMPORTANT: Copy the webhook signing secret when it appears!"
@@ -69,5 +69,5 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # Forward webhooks
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
+stripe listen --forward-to localhost:4000/api/webhooks/stripe
 

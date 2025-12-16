@@ -88,9 +88,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Webhook route needs raw body for Stripe signature verification
-// Must be BEFORE express.json() middleware
-app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), webhookController.handleStripeWebhook);
+// Webhook route - raw body will be saved via verify callback in express.json()
+app.post('/api/webhooks/stripe', webhookController.handleStripeWebhook);
 
 // GET endpoint for webhook URL (for testing/verification)
 app.get('/api/webhooks/stripe', (req, res) => {
@@ -101,8 +100,17 @@ app.get('/api/webhooks/stripe', (req, res) => {
   });
 });
 
-// JSON parsing middleware for other routes
-app.use(express.json());
+// JSON parsing middleware with verify callback to save raw body for webhooks
+app.use(express.json({
+  limit: '5mb',
+  verify: (req: any, res, buf) => {
+    // Save rawBody for webhook routes (needed for Stripe signature verification)
+    if (req.originalUrl.startsWith('/api/webhooks')) {
+      req.rawBody = buf.toString();
+      console.log(`[RawBody] Saved ${buf.length} bytes for ${req.originalUrl}`);
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // API Routes

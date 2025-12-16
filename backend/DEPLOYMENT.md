@@ -79,8 +79,12 @@ DATABASE_URL=postgresql://user:password@localhost:5432/crossflow
 # DATABASE_URL=sqlite:///var/lib/crossflow/database.db
 
 # Blockchain (Tempo Testnet)
-TEMPO_RPC_URL=https://tempo-testnet.rpc.thirdweb.com
-TEMPO_RPC_URLS=https://tempo-testnet.rpc.thirdweb.com,https://tempo-testnet.rpc.thirdweb.com/backup
+# Primary RPC URL
+TEMPO_RPC_URL=https://rpc.testnet.tempo.xyz
+
+# Fallback RPC URLs (comma-separated) - used if primary fails
+# Recommended to add fallbacks for better reliability
+TEMPO_RPC_URLS=https://rpc.testnet.tempo.xyz,https://tempo-testnet.rpc.thirdweb.com
 
 # Token Contract Addresses (configure in .env)
 # Legacy: TEMPO_USDC_CONTRACT_ADDRESS (defaults to AlphaUSD)
@@ -104,13 +108,11 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 # Email (Resend)
 RESEND_API_KEY=re_...
-FROM_EMAIL=noreply@yourdomain.com
+FROM_EMAIL=noreply@toanbm.xyz
 
 # CORS
-ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-
-# Optional: Ngrok (for development)
-NGROK_URL=https://your-ngrok-url.ngrok.io
+ALLOWED_ORIGINS=https://toanbm.xyz,https://www.toanbm.xyz
+CORS_ALLOW_ORIGIN=https://toanbm.xyz
 ```
 
 ### Initialize Database
@@ -188,8 +190,31 @@ Add configuration:
 ```nginx
 server {
     listen 80;
-    server_name api.yourdomain.com;
+    server_name api.toanbm.xyz;
 
+    # Stripe webhook endpoint - preserve raw body for signature verification
+    location /api/webhooks/stripe {
+        proxy_pass http://localhost:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # CRITICAL: Disable buffering to preserve raw body for Stripe signature verification
+        proxy_buffering off;
+        proxy_request_buffering off;
+        
+        # Preserve request body
+        proxy_set_header Content-Length $content_length;
+        
+        # Timeout settings
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # All other routes
     location / {
         proxy_pass http://localhost:4000;
         proxy_http_version 1.1;
@@ -224,7 +249,7 @@ sudo systemctl reload nginx
 sudo apt install certbot python3-certbot-nginx
 
 # Obtain certificate
-sudo certbot --nginx -d api.yourdomain.com
+sudo certbot --nginx -d api.toanbm.xyz
 
 # Auto-renewal is set up automatically
 ```
@@ -244,9 +269,10 @@ sudo ufw enable
 ## Step 7: Stripe Webhook Setup
 
 1. In Stripe Dashboard, go to Webhooks
-2. Add endpoint: `https://api.yourdomain.com/api/webhooks/stripe`
+2. Add endpoint: `https://api.toanbm.xyz/api/webhooks/stripe`
 3. Select events: `payment_intent.succeeded`, `payout.paid`, `payout.failed`, `payout.canceled`
 4. Copy webhook secret and add to `.env` as `STRIPE_WEBHOOK_SECRET`
+5. **Important:** Make sure SSL certificate is configured (Step 5) - Stripe requires HTTPS for webhooks
 
 ## Step 8: Monitoring and Maintenance
 

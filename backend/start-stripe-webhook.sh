@@ -27,7 +27,7 @@ echo "Logs will be written to: $LOG_FILE"
 echo ""
 
 # Start in background
-nohup stripe listen --forward-to localhost:3000/api/webhooks/stripe > "$LOG_FILE" 2>&1 &
+nohup stripe listen --forward-to localhost:4000/api/webhooks/stripe > "$LOG_FILE" 2>&1 &
 PID=$!
 
 # Save PID

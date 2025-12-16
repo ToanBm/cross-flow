@@ -7,25 +7,42 @@ import { stripeWebhookSecret } from '../config/stripe';
 import logger from '../utils/logger';
 import type Stripe from 'stripe';
 
+// Extend Request type to include rawBody
+interface WebhookRequest extends Request {
+  rawBody?: string;
+}
+
 /**
  * POST /api/webhooks/stripe
  * Handle Stripe webhook events
  */
-export async function handleStripeWebhook(req: Request, res: Response) {
+export async function handleStripeWebhook(req: WebhookRequest, res: Response) {
   try {
-    logger.debug('Received webhook request', { headers: req.headers });
+    // Debug logs
+    console.log('--- WEBHOOK RECEIVED ---');
+    console.log('URL:', req.originalUrl);
+    console.log('rawBody exists:', !!req.rawBody);
+    console.log('rawBody length:', req.rawBody?.length || 0);
     
     const signature = req.headers['stripe-signature'] as string;
+    console.log('Signature:', signature ? signature.substring(0, 50) + '...' : 'MISSING');
 
     if (!signature) {
       logger.error('Missing stripe-signature header');
       return res.status(400).json({ error: 'Missing stripe-signature header' });
     }
-    
-    logger.debug('Signature found, verifying...');
 
-    // req.body is raw buffer for Stripe webhook
-    const payload = req.body as string | Buffer;
+    // Use rawBody saved by express.json verify callback
+    const payload = req.rawBody;
+
+    if (!payload) {
+      logger.error('rawBody is undefined - verify callback not working');
+      return res.status(400).json({ error: 'Raw body not available' });
+    }
+
+    // Debug: check webhook secret
+    const secret = stripeWebhookSecret || '';
+    console.log(`Secret: start='${secret.substring(0, 10)}', end='${secret.substring(secret.length - 5)}', len=${secret.length}`);
 
     // Verify webhook signature
     const event = verifyWebhookSignature(
@@ -34,6 +51,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
       stripeWebhookSecret
     ) as Stripe.Event;
 
+    console.log('✅ Signature verified!');
     logger.info('Webhook event verified', { type: event.type, id: event.id });
 
     // Handle different event types
