@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { verifyWebhookSignature } from '../utils/stripe';
 import { getCashoutByPayoutId, updateCashout } from '../services/cashoutService';
 import { getPaymentByPaymentIntentId, updatePayment } from '../services/paymentService';
+import { updateActivityByPaymentIntentId } from '../services/activityHistoryService';
 import { transferTokenFromOfframp, waitForTransaction } from '../utils/blockchain';
 import { stripeWebhookSecret } from '../config/stripe';
 import logger from '../utils/logger';
@@ -277,6 +278,17 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
       completed_at: new Date(),
     });
     logger.info('Payment updated successfully', { paymentId: payment.id });
+
+    // Update activity history with tx_hash
+    try {
+      await updateActivityByPaymentIntentId(paymentIntent.id, {
+        tx_hash: receipt.hash,
+        status: 'success',
+      });
+      logger.info('Activity history updated with tx_hash', { paymentIntentId: paymentIntent.id, txHash: receipt.hash });
+    } catch (activityError) {
+      logger.warn('Failed to update activity history (non-critical)', { error: activityError });
+    }
   } catch (error: any) {
     logger.error('Error handling payment_intent.succeeded', { 
       error: error.message, 

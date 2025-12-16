@@ -17,6 +17,7 @@ export interface Transaction {
   date: string;
   status: 'pending' | 'completed' | 'failed';
   counterparty: string;
+  txHash?: string | null;
 }
 
 export interface User {

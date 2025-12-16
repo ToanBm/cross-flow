@@ -109,6 +109,73 @@ export async function saveActivity(input: CreateActivityInput): Promise<Activity
 }
 
 /**
+ * Update activity by payment_intent_id (used by webhook to add tx_hash)
+ */
+export async function updateActivityByPaymentIntentId(
+  paymentIntentId: string,
+  updates: { tx_hash?: string; status?: 'pending' | 'success' | 'failed' }
+): Promise<ActivityHistoryRecord | null> {
+  if (isSQLite) {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (updates.tx_hash !== undefined) {
+      fields.push('tx_hash = ?');
+      values.push(updates.tx_hash);
+    }
+    if (updates.status !== undefined) {
+      fields.push('status = ?');
+      values.push(updates.status);
+    }
+
+    if (fields.length === 0) return null;
+
+    values.push(paymentIntentId);
+    const stmt = (db as any).prepare(`
+      UPDATE activity_history
+      SET ${fields.join(', ')}
+      WHERE payment_intent_id = ?
+    `);
+    stmt.run(...values);
+
+    const record = (db as any)
+      .prepare('SELECT * FROM activity_history WHERE payment_intent_id = ? LIMIT 1')
+      .get(paymentIntentId) as ActivityHistoryRecord | null;
+
+    return record;
+  } else {
+    // PostgreSQL
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.tx_hash !== undefined) {
+      fields.push(`tx_hash = $${paramIndex}`);
+      values.push(updates.tx_hash);
+      paramIndex++;
+    }
+    if (updates.status !== undefined) {
+      fields.push(`status = $${paramIndex}`);
+      values.push(updates.status);
+      paramIndex++;
+    }
+
+    if (fields.length === 0) return null;
+
+    values.push(paymentIntentId);
+    const result = await (db as any).query(
+      `UPDATE activity_history
+       SET ${fields.join(', ')}
+       WHERE payment_intent_id = $${paramIndex}
+       RETURNING *`,
+      values
+    );
+
+    return result.rows[0] || null;
+  }
+}
+
+/**
  * Get activity history for a wallet address
  */
 export async function getActivityHistory(

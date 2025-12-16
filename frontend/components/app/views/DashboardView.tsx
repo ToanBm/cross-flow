@@ -360,6 +360,16 @@ export const DashboardView: React.FC<{
                     {tx.amount.toFixed(2)} {tx.currency}
                   </p>
                   <p className="text-xs text-aurora-textMuted">{tx.date.split(',')[0]}</p>
+                  {tx.txHash && (
+                    <a
+                      href={`https://explore.tempo.xyz/tx/${tx.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-aurora-primary hover:underline"
+                    >
+                      {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
+                    </a>
+                  )}
                 </div>
               </div>
             )))}

@@ -974,6 +974,7 @@ const InnerApp: React.FC = () => {
                             : 'Unknown',
                   date: new Date(act.created_at).toLocaleString(),
                   status: act.status || 'completed',
+                  txHash: act.tx_hash || null,
                 }))
               : [] // Empty array instead of mock data
           }
