@@ -1,7 +1,7 @@
 import { createConfig, http } from 'wagmi';
 import { tempo } from 'tempo.ts/chains';
 import { KeyManager, webAuthn } from 'tempo.ts/wagmi';
-import { withFeePayer } from 'tempo.ts/viem';
+// import { withFeePayer } from 'tempo.ts/viem'; // Tắt sponsor gas
 
 // Production-safe: store credential public keys on the backend (KeyManager.http).
 // This enables multi-device sign-in and avoids localStorage fragility.
@@ -15,9 +15,9 @@ export const tempoChain = tempo({
 // RPC Tempo thật (cần cho các call read như balanceOf, etc)
 const tempoRpcUrl = process.env.NEXT_PUBLIC_TEMPO_RPC_URL || '';
 
-// Fee-payer server URL (backend sponsor gas)
-const feePayerUrl =
-  process.env.NEXT_PUBLIC_TEMPO_FEE_PAYER_URL || 'http://localhost:3100';
+// Fee-payer server URL (backend sponsor gas) - Tắt sponsor gas
+// const feePayerUrl =
+//   process.env.NEXT_PUBLIC_TEMPO_FEE_PAYER_URL || 'http://localhost:3100';
 
 // Helper to get rpId - must match current domain
 const getRpId = () => {
@@ -40,11 +40,8 @@ export const wagmiConfig = createConfig({
   ],
   multiInjectedProviderDiscovery: false,
   transports: {
-    // Dùng withFeePayer wrapper: RPC Tempo thật + fee-payer server để sponsor gas
-    [tempoChain.id]: withFeePayer(
-      http(tempoRpcUrl), // RPC Tempo thật
-      http(feePayerUrl), // Fee-payer server backend
-    ),
+    // Tắt sponsor gas - user tự trả phí
+    [tempoChain.id]: http(tempoRpcUrl),
   },
 });
 
