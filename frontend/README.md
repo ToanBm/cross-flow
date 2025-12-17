@@ -21,9 +21,10 @@ Crossflow is a cross-border payment application that allows users to:
 - **Multi-token Support**: Support for AlphaUSD, BetaUSD, and ThetaUSD stablecoins
 - **Bank Account Management**: Connect and manage multiple bank accounts for withdrawals
 - **Recipient Management**: Save and manage frequently used recipient addresses
-- **Activity History**: Track all transactions (deposits, sends, withdrawals)
+- **Activity History**: Track all transactions with table view and pagination
 - **Real-time Balance**: Display wallet balances and bank account balances
 - **Dark/Light Mode**: Theme switching support
+- **Feedback System**: Floating feedback button for user feedback collection
 
 ### 🔒 Security
 
@@ -56,9 +57,11 @@ frontend/
 │   ├── app/
 │   │   ├── modals/       # Modal components
 │   │   │   ├── BankConnectModal.tsx
+│   │   │   ├── FeedbackModal.tsx
 │   │   │   ├── PasskeyModal.tsx
 │   │   │   ├── ReceiveModal.tsx
 │   │   │   └── RecipientsModal.tsx
+│   │   ├── FeedbackButton.tsx  # Floating feedback button
 │   │   └── views/        # Page view components
 │   │       ├── DashboardView.tsx
 │   │       ├── DepositView.tsx
@@ -184,13 +187,14 @@ Main application dashboard showing:
 - User can view their wallet address
 - User can copy address or view QR code (if implemented)
 
-### 8. Withdraw
+### 8. Withdraw (Bank Transfer)
 
 - User selects bank account (or connects new one)
 - User enters amount in USDT
 - System calculates fiat equivalent
 - Withdrawal request is created
 - USDT is transferred to offramp wallet
+- **Transfer confirmation**: Shows "✓ Transfer confirmed" with link to Tempo Explorer
 - Stripe payout is initiated
 - User receives funds in bank account
 
@@ -214,6 +218,19 @@ Displays and allows selection of saved recipient addresses.
 
 Main dashboard showing balances, wallet info, bank accounts, and activity history.
 
+Features:
+- **Recent Activity Table**: Displays transactions in a table format with columns: Transaction (txHash), Type, Date, Status, Amount
+- **Pagination**: Shows 5 transactions per page with Prev/Next navigation
+- **Status Badges**: Color-coded status indicators (green for success/completed, yellow for pending, red for failed)
+
+### FeedbackModal
+
+Floating feedback button (bottom-right corner) that opens a modal for users to submit feedback:
+- Textarea for feedback message
+- Automatically captures user email and wallet address
+- Submits to backend `/api/feedback` endpoint
+- Stores feedback in SQLite database
+
 ## API Integration
 
 The frontend uses Next.js API routes as proxies to the backend API:
@@ -225,6 +242,7 @@ The frontend uses Next.js API routes as proxies to the backend API:
 - `/api/recipients`: Recipient management
 - `/api/activity-history`: Activity history
 - `/api/key-manager/*`: KeyManager endpoints for Passkey
+- `/api/feedback`: User feedback submission
 
 All API calls are made server-side through Next.js API routes for security.
 
