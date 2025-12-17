@@ -735,7 +735,7 @@ const InnerApp: React.FC = () => {
         amount: amountWei,
         to: offrampInfo.address as `0x${string}`,
         token: TOKEN_ADDRESSES[selectedToken],
-        feePayer: false, // Tắt sponsor gas - user tự trả phí
+        // feePayer: undefined, // Tắt sponsor gas - user tự trả phí
       });
 
       const txHash =
@@ -866,7 +866,7 @@ const InnerApp: React.FC = () => {
         token: TOKEN_ADDRESSES[selectedToken],
         feeToken: (tempoChain as any).feeToken ?? null,
         memo: memo ? pad(stringToHex(memo), { size: 32 }) : undefined,
-        feePayer: false, // Tắt sponsor gas - user tự trả phí
+        // feePayer: undefined, // Tắt sponsor gas - user tự trả phí
       });
 
       setNotification({
