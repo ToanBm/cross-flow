@@ -215,3 +215,15 @@ CREATE INDEX IF NOT EXISTS idx_activity_history_type ON activity_history(activit
 CREATE INDEX IF NOT EXISTS idx_activity_history_created ON activity_history(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_activity_history_tx_hash ON activity_history(tx_hash);
 
+-- Feedbacks table (User feedback)
+CREATE TABLE IF NOT EXISTS feedbacks (
+  id SERIAL PRIMARY KEY,
+  message TEXT NOT NULL,
+  email VARCHAR(255),
+  user_address VARCHAR(42),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedbacks_email ON feedbacks(email);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_created ON feedbacks(created_at DESC);
+

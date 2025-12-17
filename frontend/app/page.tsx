@@ -45,6 +45,8 @@ import { PasskeyModal } from '../components/app/modals/PasskeyModal';
 import { ReceiveModal } from '../components/app/modals/ReceiveModal';
 import { RecipientsModal } from '../components/app/modals/RecipientsModal';
 import { BankConnectModal, type BankAccount } from '../components/app/modals/BankConnectModal';
+import { FeedbackModal } from '../components/app/modals/FeedbackModal';
+import { FeedbackButton } from '../components/app/FeedbackButton';
 import { LandingView } from '../components/app/views/LandingView';
 import { KycView } from '../components/app/views/KycView';
 import { DashboardView } from '../components/app/views/DashboardView';
@@ -87,6 +89,7 @@ const InnerApp: React.FC = () => {
   const [withdrawTxHash, setWithdrawTxHash] = useState<string | null>(null);
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
   const [isRecipientsModalOpen, setIsRecipientsModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   const connection = useConnection();
   const { disconnect } = useDisconnect();
@@ -1108,6 +1111,13 @@ const InnerApp: React.FC = () => {
           setRecipient(address);
         }}
       />
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        userEmail={user?.email}
+        userAddress={address}
+      />
+      <FeedbackButton onClick={() => setIsFeedbackModalOpen(true)} />
     </div>
   );
 };

@@ -106,9 +106,19 @@ export const WithdrawView: React.FC<{
               </div>
 
               {withdrawTxHash && (
-                <p className="text-xs text-aurora-textMuted font-mono break-all">
-                  On-chain txHash: <span className="text-aurora-primary">{withdrawTxHash}</span>
-                </p>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-green-500">✓</span>
+                  <span className="text-aurora-text">Transfer confirmed</span>
+                  <span className="text-aurora-textMuted">—</span>
+                  <a
+                    href={`https://explorer.tempo.xyz/tx/${withdrawTxHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-aurora-primary hover:underline font-mono"
+                  >
+                    View on Explorer
+                  </a>
+                </div>
               )}
 
               <Button className="w-full" glow onClick={onWithdraw} disabled={isLoading}>

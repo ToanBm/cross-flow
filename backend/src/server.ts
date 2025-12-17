@@ -17,6 +17,7 @@ import activityHistoryRoutes from './routes/activityHistory';
 import bankAccountsRoutes from './routes/bankAccounts';
 import userWalletLinksRoutes from './routes/userWalletLinks';
 import keyManagerRoutes from './routes/keyManager';
+import feedbackRoutes from './routes/feedbackRoutes';
 import * as webhookController from './controllers/webhookController';
 
 // Load environment variables
@@ -124,6 +125,7 @@ app.use('/api/activity-history', activityHistoryRoutes);
 app.use('/api/bank-accounts', bankAccountsRoutes);
 app.use('/api/user-wallet-links', userWalletLinksRoutes);
 app.use('/api/key-manager', keyManagerRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Test endpoint removed - not needed for production
 
