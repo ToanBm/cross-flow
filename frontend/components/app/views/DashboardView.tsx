@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import {
   ArrowUpRight,
@@ -67,6 +67,15 @@ export const DashboardView: React.FC<{
   bankAccounts,
   onOpenBankModal,
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
+
+  const totalPages = Math.ceil(transactions.length / ITEMS_PER_PAGE);
+  const paginatedTransactions = transactions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const shortenId = (id: string, head = 6, tail = 4) => {
     if (!id) return '';
     if (id.length <= head + tail + 3) return id;
@@ -83,7 +92,7 @@ export const DashboardView: React.FC<{
   };
 
   return (
-    <div className="min-h-screen bg-aurora-bg pb-20">
+    <div className="min-h-screen bg-aurora-bg pb-10">
       <header className="border-b border-aurora-border bg-aurora-bg/80 backdrop-blur-md sticky top-0 z-50">
         <div className="w-[80%] mx-auto px-6 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer">
@@ -316,64 +325,112 @@ export const DashboardView: React.FC<{
             <h3 className="text-base font-mono font-semibold uppercase tracking-[0.28em] text-aurora-primary">
               Recent Activity
             </h3>
-            <button className="text-sm text-aurora-primary hover:underline">View All</button>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-xs font-mono rounded border border-aurora-border text-aurora-text hover:bg-aurora-primary/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-7 h-7 text-xs font-mono rounded border transition-colors ${
+                      currentPage === page
+                        ? 'bg-aurora-primary text-white border-aurora-primary'
+                        : 'border-aurora-border text-aurora-text hover:bg-aurora-primary/10'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-xs font-mono rounded border border-aurora-border text-aurora-text hover:bg-aurora-primary/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="space-y-3">
-            {transactions.length === 0 ? (
-              <div className="glass-panel p-8 rounded-sm text-center">
-                <p className="text-sm text-aurora-textMuted">No activity yet</p>
-              </div>
-            ) : (
-              transactions.map((tx) => (
-              <div
-                key={tx.id}
-                className="glass-panel p-4 rounded-sm flex items-center justify-between hover:bg-aurora-primary/5 transition-colors cursor-default"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center border ${
-                      tx.type === 'receive' || tx.type === 'deposit'
-                        ? 'bg-green-500/10 border-green-500/30 text-green-500'
-                        : 'bg-red-500/10 border-red-500/30 text-red-500'
-                    }`}
-                  >
-                    {tx.type === 'deposit' && <ArrowUpRight size={18} />}
-                    {tx.type === 'withdraw' && <Download size={18} />}
-                    {tx.type === 'send' && <ArrowUpRight size={18} className="rotate-45" />}
-                    {tx.type === 'receive' && <Download size={18} className="rotate-45" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-aurora-text capitalize">{tx.type}</p>
-                    <p className="text-xs text-aurora-textMuted">{tx.counterparty}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p
-                    className={`font-mono text-sm ${
-                      tx.type === 'receive' || tx.type === 'deposit'
-                        ? 'text-green-500'
-                        : 'text-aurora-text'
-                    }`}
-                  >
-                    {tx.type === 'receive' || tx.type === 'deposit' ? '+' : '-'}
-                    {tx.amount.toFixed(2)} {tx.currency}
-                  </p>
-                  <p className="text-xs text-aurora-textMuted">{tx.date.split(',')[0]}</p>
-                  {tx.txHash && (
-                    <a
-                      href={`https://explore.tempo.xyz/tx/${tx.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-aurora-primary hover:underline"
-                    >
-                      {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
-                    </a>
-                  )}
-                </div>
-              </div>
-            )))}
-          </div>
+          {transactions.length === 0 ? (
+            <div className="glass-panel p-8 rounded-sm text-center">
+              <p className="text-sm text-aurora-textMuted">No activity yet</p>
+            </div>
+          ) : (
+            <div className="glass-panel rounded-sm overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-aurora-border bg-aurora-primary/5">
+                    <th className="px-4 py-3 text-left text-xs font-mono font-semibold uppercase tracking-wider text-aurora-textMuted">Transaction</th>
+                    <th className="px-4 py-3 text-left text-xs font-mono font-semibold uppercase tracking-wider text-aurora-textMuted">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-mono font-semibold uppercase tracking-wider text-aurora-textMuted">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-mono font-semibold uppercase tracking-wider text-aurora-textMuted">Status</th>
+                    <th className="px-4 py-3 text-right text-xs font-mono font-semibold uppercase tracking-wider text-aurora-textMuted">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedTransactions.map((tx) => (
+                    <tr key={tx.id} className="border-b border-aurora-border last:border-b-0 hover:bg-aurora-primary/5 transition-colors">
+                      <td className="px-4 py-3">
+                        {tx.txHash ? (
+                          <a href={`https://explore.tempo.xyz/tx/${tx.txHash}`} target="_blank" rel="noopener noreferrer"
+                            className="text-sm text-aurora-primary hover:underline font-mono">
+                            {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
+                          </a>
+                        ) : (
+                          <span className="text-sm text-aurora-textMuted font-mono">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${
+                            tx.type === 'receive' || tx.type === 'deposit'
+                              ? 'bg-green-500/10 border-green-500/30 text-green-500'
+                              : 'bg-red-500/10 border-red-500/30 text-red-500'
+                          }`}>
+                            {tx.type === 'deposit' && <ArrowUpRight size={12} />}
+                            {tx.type === 'withdraw' && <Download size={12} />}
+                            {tx.type === 'send' && <ArrowUpRight size={12} className="rotate-45" />}
+                            {tx.type === 'receive' && <Download size={12} className="rotate-45" />}
+                          </div>
+                          <span className="text-sm text-aurora-text">
+                            {tx.type === 'deposit' ? 'Card Payment' :
+                             tx.type === 'withdraw' ? 'Bank Transfer' :
+                             tx.type === 'send' ? 'Send' :
+                             tx.type === 'receive' ? 'Receive' : tx.type}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-aurora-textMuted font-mono">{tx.date}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 text-xs font-mono rounded ${
+                          tx.status === 'completed' || tx.status === 'success' ? 'bg-green-500/10 text-green-500' :
+                          tx.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
+                          'bg-red-500/10 text-red-500'
+                        }`}>
+                          {tx.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={`font-mono text-sm ${
+                          tx.type === 'receive' || tx.type === 'deposit' ? 'text-green-500' : 'text-aurora-text'
+                        }`}>
+                          {tx.type === 'receive' || tx.type === 'deposit' ? '+' : '-'}
+                          {tx.amount.toFixed(2)} {tx.currency}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </main>
     </div>

@@ -314,7 +314,7 @@ const InnerApp: React.FC = () => {
       if (query.state.error) {
         return false;
       }
-      return 60000; // Refetch mỗi 60s nếu không có lỗi
+      return 15000; // Refetch mỗi 15s nếu không có lỗi
     },
     retry: 1,
     retryDelay: 5000, // Wait 5s before retry

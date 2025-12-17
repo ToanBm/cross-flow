@@ -15,7 +15,7 @@ export interface Transaction {
   amount: number;
   currency: 'USD' | 'USDC';
   date: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: 'pending' | 'completed' | 'success' | 'failed';
   counterparty: string;
   txHash?: string | null;
 }
