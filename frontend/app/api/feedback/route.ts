@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const BACKEND_URL =
+  process.env.NEXT_API_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  'http://localhost:4000';
 
 export async function POST(request: NextRequest) {
   try {
