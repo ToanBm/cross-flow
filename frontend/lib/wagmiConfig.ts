@@ -20,25 +20,25 @@ const tempoRpcUrl = process.env.NEXT_PUBLIC_TEMPO_RPC_URL || '';
 //   process.env.NEXT_PUBLIC_TEMPO_FEE_PAYER_URL || 'http://localhost:3100';
 
 // Helper to get rpId - must match current domain
+// Only set rpId if env var is explicitly provided, otherwise let SDK auto-detect
 const getRpId = () => {
-  // Use env var if set (for production deployments)
+  // Only use env var if explicitly set (for production deployments)
+  // Don't auto-detect here as this runs at build time, not runtime
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_WEBAUTHN_RP_ID) {
-    return process.env.NEXT_PUBLIC_WEBAUTHN_RP_ID;
+    return process.env.NEXT_PUBLIC_WEBAUTHN_RP_ID.trim();
   }
-  // For client-side, auto-detect from window.location
-  if (typeof window !== 'undefined') {
-    return window.location.hostname;
-  }
-  // For server-side build, return undefined
+  // Return undefined to let Tempo SDK auto-detect from window.location.hostname at runtime
   return undefined;
 };
+
+const rpId = getRpId();
 
 export const wagmiConfig = createConfig({
   chains: [tempoChain],
   connectors: [
     webAuthn({
       keyManager: httpKeyManager,
-      ...(getRpId() ? { rpId: getRpId() } : {}),
+      ...(rpId ? { rpId } : {}),
     }),
   ],
   multiInjectedProviderDiscovery: false,
