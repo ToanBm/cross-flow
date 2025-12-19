@@ -26,8 +26,9 @@ function base64ToString(input: string) {
 }
 
 function getRpFromEnvOrHost(hostname: string | undefined) {
-  const rpIdRaw = (process.env.WEBAUTHN_RP_ID || hostname || '').trim();
-  const rpId = rpIdRaw.replace(/:\d+$/, ''); // strip port
+  // Prefer hostname from request (from frontend), fallback to env var
+  const rpIdRaw = (hostname || process.env.WEBAUTHN_RP_ID || '').trim();
+  const rpId = rpIdRaw.replace(/:\d+$/, '').replace(/^https?:\/\//, ''); // strip port and protocol
   if (!rpId) return undefined;
   return {
     id: rpId,

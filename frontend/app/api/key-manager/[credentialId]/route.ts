@@ -45,8 +45,9 @@ export async function POST(
     const body = await request.json();
     
     // Get hostname from request headers (for Vercel/production)
-    const hostname = request.headers.get('host') || request.headers.get('x-forwarded-host') || '';
-    const rpId = hostname.replace(/:\d+$/, '').replace(/^https?:\/\//, ''); // Remove port and protocol
+    const hostHeader = request.headers.get('host') || request.headers.get('x-forwarded-host') || '';
+    // Remove port and protocol, get clean domain
+    const rpId = hostHeader.split(':')[0].replace(/^https?:\/\//, '');
     
     const url = new URL(`${BACKEND_URL}/api/key-manager/${encodeURIComponent(id)}`);
     if (rpId) {

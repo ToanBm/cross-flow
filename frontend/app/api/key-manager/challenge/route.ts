@@ -11,10 +11,12 @@ const BACKEND_URL =
 export async function GET(request: NextRequest) {
   try {
     // Get hostname from request headers (for Vercel/production)
-    const hostname = request.headers.get('host') || request.headers.get('x-forwarded-host') || '';
-    const rpId = hostname.replace(/:\d+$/, '').replace(/^https?:\/\//, ''); // Remove port and protocol
+    const hostHeader = request.headers.get('host') || request.headers.get('x-forwarded-host') || '';
+    // Remove port and protocol, get clean domain
+    const rpId = hostHeader.split(':')[0].replace(/^https?:\/\//, '');
     
     const url = new URL(`${BACKEND_URL}/api/key-manager/challenge`);
+    // Always pass hostname to backend
     if (rpId) {
       url.searchParams.set('hostname', rpId);
     }
