@@ -35,10 +35,10 @@ export const LandingView: React.FC<{
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 mt-6">
         {showVideo ? (
           <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
-            <div className="w-full aspect-video bg-black/20 border border-aurora-border rounded-sm overflow-hidden">
+            <div className="w-full bg-black/20 border border-aurora-border rounded-sm overflow-hidden" style={{ aspectRatio: '560/315' }}>
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/lw7hZA3z8dw?si=N552cHCUU4SN9Z9S"
+                src="https://www.youtube.com/embed/_COnehcLDtw?si=ZzIIV1odpb6r7Zhh"
                 title="YouTube video player"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

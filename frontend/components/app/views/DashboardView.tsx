@@ -94,7 +94,7 @@ export const DashboardView: React.FC<{
     <div className="min-h-screen bg-aurora-bg pb-10">
       <header className="border-b border-aurora-border bg-aurora-bg/80 backdrop-blur-md sticky top-0 z-50">
         <div className="w-[80%] mx-auto px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-2 cursor-pointer">
+          <div className="flex items-center gap-2">
             <span className="font-mono font-bold tracking-[0.05em] text-3xl text-aurora-primary">
               Acrosspay
             </span>

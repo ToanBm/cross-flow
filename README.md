@@ -1,10 +1,10 @@
-# Acrosspay Frontend
+# Acrosspay
 
-A modern, borderless payment application built on Tempo Testnet, enabling seamless fiat ↔ stablecoin conversion, global on-chain transfers, and bank cash-out via Stripe payment infrastructure.
+**Acrosspay** is a modern, borderless payment application built on Tempo Testnet, enabling seamless fiat ↔ stablecoin conversion, global on-chain transfers, and bank cash-out via Stripe payment infrastructure.
 
 ## Overview
 
-Acrosspay is a cross-border payment application that allows users to:
+Acrosspay provides a simple and secure cross-border payment solution that allows users to:
 
 - **Deposit funds** using credit/debit cards via Stripe (on-ramp)
 - **Send stablecoins** (AlphaUSD, BetaUSD, ThetaUSD) to any wallet address on Tempo Testnet
