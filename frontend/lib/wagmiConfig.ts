@@ -24,9 +24,9 @@ export const wagmiConfig = createConfig({
   connectors: [
     webAuthn({
       keyManager: httpKeyManager,
-      // Hardcode RP ID to production domain
-      // This ensures it matches acrosspay.xyz regardless of Vercel subdomain
-      rpId: 'acrosspay.xyz',
+      // Don't set rpId - let SDK auto-detect from window.location.hostname
+      // This ensures RP ID always matches the current domain
+      // Backend will receive hostname from request and use it
     }),
   ],
   multiInjectedProviderDiscovery: false,
