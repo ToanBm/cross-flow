@@ -98,7 +98,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-aurora-textMuted">
-                Help us improve Crossflow. Share your thoughts, report bugs, or suggest features.
+                Help us improve Acrosspay. Share your thoughts, report bugs, or suggest features.
               </p>
 
               <textarea

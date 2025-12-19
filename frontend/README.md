@@ -1,10 +1,10 @@
-# Crossflow Frontend
+# Acrosspay Frontend
 
 A modern, borderless payment application built on Tempo Testnet, enabling seamless fiat ↔ stablecoin conversion, global on-chain transfers, and bank cash-out via Stripe payment infrastructure.
 
 ## Overview
 
-Crossflow is a cross-border payment application that allows users to:
+Acrosspay is a cross-border payment application that allows users to:
 
 - **Deposit funds** using credit/debit cards via Stripe (on-ramp)
 - **Send stablecoins** (AlphaUSD, BetaUSD, ThetaUSD) to any wallet address on Tempo Testnet

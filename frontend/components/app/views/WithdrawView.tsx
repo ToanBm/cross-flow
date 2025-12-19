@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2 } from 'lucide-react';
+import { Building2, ShieldCheck } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { Input } from '../../ui/Input';
@@ -124,6 +124,11 @@ export const WithdrawView: React.FC<{
               <Button className="w-full" glow onClick={onWithdraw} disabled={isLoading}>
                 {isLoading ? 'Processing transfer...' : 'Bank Transfer'}
               </Button>
+
+              <div className="flex items-center justify-center gap-2 text-aurora-textMuted text-sm mt-4">
+                <ShieldCheck size={12} />
+                <span>Power by <span className="font-bold">Stripe</span></span>
+              </div>
             </div>
           </div>
         </Card>

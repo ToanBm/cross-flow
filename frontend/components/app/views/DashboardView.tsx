@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Image from 'next/image';
 import {
   ArrowUpRight,
   Copy,
@@ -96,11 +95,8 @@ export const DashboardView: React.FC<{
       <header className="border-b border-aurora-border bg-aurora-bg/80 backdrop-blur-md sticky top-0 z-50">
         <div className="w-[80%] mx-auto px-6 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer">
-            <div className="bg-aurora-bg rounded-md p-1">
-              <Image src={isDark ? "/crossflow-dark.png" : "/crossflow-light.png"} alt="Crossflow" width={68} height={45} className="rounded-md" />
-            </div>
-            <span className="font-mono font-bold tracking-[0.32em] text-xl text-aurora-primary">
-              Crossflow
+            <span className="font-mono font-bold tracking-[0.05em] text-3xl text-aurora-primary">
+              Acrosspay
             </span>
           </div>
           <div className="flex items-center gap-4">

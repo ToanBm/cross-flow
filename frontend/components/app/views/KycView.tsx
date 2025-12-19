@@ -51,7 +51,7 @@ export const KycView: React.FC<{
               <ShieldCheck className="w-8 h-8 text-aurora-primary" />
             </div>
             <p className="text-aurora-textMuted text-sm">
-              Verify your email to activate your Crossflow account.
+              Verify your email to activate your Acrosspay account.
             </p>
           </div>
 

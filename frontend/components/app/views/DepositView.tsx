@@ -121,11 +121,11 @@ export const DepositView: React.FC<{
                   Payment method
                 </label>
                 <div className="border border-aurora-border p-3 rounded-sm bg-aurora-input">
-                  <div className="font-mono text-sm text-aurora-text">
-                    Visa 4242 4242 4242 4242 12/34 123
+                  <div className="font-mono text-sm text-aurora-textMuted">
+                    Visa 4242 4242 4242 4242 MM/YY 12/34 CVC 123
                   </div>
-                  <div className="font-mono text-sm text-aurora-text mt-2">
-                    Mastercard 5555 5555 5555 4444 12/34 123
+                  <div className="font-mono text-sm text-aurora-textMuted mt-2">
+                    Mastercard 5555 5555 5555 4444 MM/YY 12/34 CVC 123
                   </div>
                 </div>
               </div>
@@ -157,7 +157,7 @@ export const DepositView: React.FC<{
 
               <div className="flex items-center justify-center gap-2 text-aurora-textMuted text-sm mt-4">
                 <ShieldCheck size={12} />
-                <span>Power by Stripe</span>
+                <span>Power by <span className="font-bold">Stripe</span></span>
               </div>
             </div>
           </div>

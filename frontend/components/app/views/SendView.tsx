@@ -59,7 +59,7 @@ export const SendView: React.FC<{
             <div className="space-y-6">
               <Input
                 label="Recipient (Wallet Address)"
-                placeholder="user@example.com or 0x..."
+                placeholder="0x..."
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
                 icon={<BookOpen size={18} />}

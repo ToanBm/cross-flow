@@ -38,6 +38,6 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
 ];
 
-export const APP_NAME = 'Crossflow';
+export const APP_NAME = 'Acrosspay';
 
 
