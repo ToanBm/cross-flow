@@ -19,13 +19,23 @@ const tempoRpcUrl = process.env.NEXT_PUBLIC_TEMPO_RPC_URL || '';
 // const feePayerUrl =
 //   process.env.NEXT_PUBLIC_TEMPO_FEE_PAYER_URL || 'http://localhost:3100';
 
+// Get RP ID - use window.location.hostname if available (client-side), otherwise use env var or fallback
+const getRpId = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use current domain
+    return window.location.hostname;
+  }
+  // Server-side: use env var or fallback to production domain
+  return process.env.NEXT_PUBLIC_WEBAUTHN_RP_ID || 'acrosspay.xyz';
+};
+
 export const wagmiConfig = createConfig({
   chains: [tempoChain],
   connectors: [
     webAuthn({
       keyManager: httpKeyManager,
-      // Don't set rpId - let SDK auto-detect from window.location.hostname
-      // This ensures RP ID always matches the current domain
+      // Set explicit RP ID - will be window.location.hostname on client-side
+      rpId: getRpId(),
     }),
   ],
   multiInjectedProviderDiscovery: false,
