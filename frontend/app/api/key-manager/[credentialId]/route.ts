@@ -43,7 +43,17 @@ export async function POST(
   try {
     const id = context.params.credentialId;
     const body = await request.json();
-    const resp = await fetch(`${BACKEND_URL}/api/key-manager/${encodeURIComponent(id)}`, {
+    
+    // Get hostname from request headers (for Vercel/production)
+    const hostname = request.headers.get('host') || request.headers.get('x-forwarded-host') || '';
+    const rpId = hostname.replace(/:\d+$/, '').replace(/^https?:\/\//, ''); // Remove port and protocol
+    
+    const url = new URL(`${BACKEND_URL}/api/key-manager/${encodeURIComponent(id)}`);
+    if (rpId) {
+      url.searchParams.set('hostname', rpId);
+    }
+    
+    const resp = await fetch(url.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       cache: 'no-store',

@@ -21,11 +21,14 @@ const tempoRpcUrl = process.env.NEXT_PUBLIC_TEMPO_RPC_URL || '';
 
 // Helper to get rpId - must match current domain
 const getRpId = () => {
-  // Use env var if set
-  if (process.env.NEXT_PUBLIC_WEBAUTHN_RP_ID) {
+  // Use env var if set (for production deployments)
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_WEBAUTHN_RP_ID) {
     return process.env.NEXT_PUBLIC_WEBAUTHN_RP_ID;
   }
-  // For client-side, return undefined to let SDK auto-detect
+  // For client-side, auto-detect from window.location
+  if (typeof window !== 'undefined') {
+    return window.location.hostname;
+  }
   // For server-side build, return undefined
   return undefined;
 };

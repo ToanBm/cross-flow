@@ -3,8 +3,10 @@ import * as keyManagerService from '../services/keyManagerService';
 
 export async function getChallenge(req: Request, res: Response) {
   try {
+    // Prefer hostname from query param (from frontend), fallback to req.hostname
+    const hostname = (req.query.hostname as string) || req.hostname;
     const { challenge, rp } = await keyManagerService.createChallenge({
-      hostname: req.hostname,
+      hostname,
     });
     return res.json({ challenge, ...(rp ? { rp } : {}) });
   } catch (error: any) {
@@ -35,11 +37,14 @@ export async function setCredentialPublicKey(req: Request, res: Response) {
 
     const { credential, publicKey } = req.body || {};
 
+    // Prefer hostname from query param (from frontend), fallback to req.hostname
+    const hostname = (req.query.hostname as string) || req.hostname;
+
     const result = await keyManagerService.verifyAndStorePublicKey({
       credentialId: id,
       credential,
       publicKey,
-      hostname: req.hostname,
+      hostname,
     });
 
     if (!result.ok) {
