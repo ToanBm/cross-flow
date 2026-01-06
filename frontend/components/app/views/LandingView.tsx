@@ -15,7 +15,7 @@ export const LandingView: React.FC<{
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-aurora-bg text-aurora-text">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[50vh] bg-aurora-primary/10 blur-[120px] rounded-full pointer-events-none" />
 
-      <nav className="relative z-10 w-[80%] mx-auto px-6 py-3 flex justify-between items-center">
+      <nav className="relative z-10 w-full md:w-[80%] mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <span className="font-mono text-3xl tracking-[0.05em] font-bold text-aurora-text">{appName}</span>
         </div>
@@ -72,7 +72,7 @@ export const LandingView: React.FC<{
               >
                 <div className="p-6">
                   <p className="text-aurora-text text-sm leading-relaxed">
-                  Deposit fiat instantly, convert to stablecoins like USDC or EURC, and access global on-chain transfers within seconds on the Tempo network. 
+                    Deposit fiat instantly, convert to stablecoins like USDC or EURC, and access global on-chain transfers within seconds on the Tempo network.
                   </p>
                 </div>
               </Card>
@@ -83,7 +83,7 @@ export const LandingView: React.FC<{
               >
                 <div className="p-6">
                   <p className="text-aurora-text text-sm leading-relaxed">
-                  Send stablecoins worldwide using wallet addresses. Enjoy fast settlement, low fees, and secure transactions powered by the Tempo blockchain.
+                    Send stablecoins worldwide using wallet addresses. Enjoy fast settlement, low fees, and secure transactions powered by the Tempo blockchain.
                   </p>
                 </div>
               </Card>
@@ -94,7 +94,7 @@ export const LandingView: React.FC<{
               >
                 <div className="p-6">
                   <p className="text-aurora-text text-sm leading-relaxed">
-                  Withdraw stablecoins directly to your bank account through Stripe-powered payout infrastructure with secure processing and compliance-ready rails.
+                    Withdraw stablecoins directly to your bank account through Stripe-powered payout infrastructure with secure processing and compliance-ready rails.
                   </p>
                 </div>
               </Card>

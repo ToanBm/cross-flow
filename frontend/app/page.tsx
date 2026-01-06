@@ -1043,6 +1043,9 @@ const InnerApp: React.FC = () => {
           withdrawTxHash={withdrawTxHash}
           onWithdraw={handleWithdraw}
           isLoading={isLoading}
+          alphaUsdBalance={alphaUsdBalance}
+          betaUsdBalance={betaUsdBalance}
+          thetaUsdBalance={thetaUsdBalance}
         />
       )}
 

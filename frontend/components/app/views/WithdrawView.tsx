@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, ShieldCheck } from 'lucide-react';
+import { Building2, ShieldCheck, Wallet } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { Input } from '../../ui/Input';
@@ -22,6 +22,9 @@ export const WithdrawView: React.FC<{
   withdrawTxHash: string | null;
   onWithdraw: () => void;
   isLoading: boolean;
+  alphaUsdBalance: number | undefined;
+  betaUsdBalance: number | undefined;
+  thetaUsdBalance: number | undefined;
 }> = ({
   onBack,
   selectedToken,
@@ -32,6 +35,9 @@ export const WithdrawView: React.FC<{
   withdrawTxHash,
   onWithdraw,
   isLoading,
+  alphaUsdBalance,
+  betaUsdBalance,
+  thetaUsdBalance,
 }) => {
     return (
       <div className="min-h-screen bg-aurora-bg flex items-center justify-center p-6">
@@ -52,9 +58,32 @@ export const WithdrawView: React.FC<{
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-mono text-aurora-textMuted uppercase tracking-[0.22em]">
-                      Asset
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-mono text-aurora-textMuted uppercase tracking-[0.22em]">
+                        Asset
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <Wallet size={14} className="text-aurora-textMuted" />
+                        <span className="text-xs font-mono text-aurora-text">
+                          {selectedToken === 'AlphaUSD' && alphaUsdBalance !== undefined
+                            ? alphaUsdBalance.toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                            : selectedToken === 'BetaUSD' && betaUsdBalance !== undefined
+                              ? betaUsdBalance.toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
+                              : selectedToken === 'ThetaUSD' && thetaUsdBalance !== undefined
+                                ? thetaUsdBalance.toLocaleString('en-US', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })
+                                : '...'}
+                        </span>
+                      </div>
+                    </div>
                     <select
                       className="w-full bg-aurora-input border border-aurora-border text-aurora-text px-4 h-[46px] rounded-sm focus:outline-none focus:border-aurora-primary/50 focus:shadow-neon transition-all placeholder-aurora-textMuted/50 font-light text-sm"
                       value={selectedToken}
