@@ -44,36 +44,41 @@ app.use(helmet({
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
   : [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:3000',
-      'https://payonstable.vercel.app',
-      'https://*.vercel.app',
-    ];
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'https://payonstable.vercel.app',
+    'https://*.vercel.app',
+  ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
+
       // Check exact match
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      
+
       // Check wildcard match for vercel.app
       if (origin.includes('.vercel.app') && allowedOrigins.some(o => o.includes('*.vercel.app'))) {
         return callback(null, true);
       }
-      
+
+      // Allow all ngrok domains dynamically
+      if (origin.endsWith('.ngrok-free.app') || origin.endsWith('.ngrok.io')) {
+        return callback(null, true);
+      }
+
       // For development, allow all origins (CHANGE IN PRODUCTION)
       if (process.env.NODE_ENV === 'development') {
         logger.debug(`CORS: Allowing origin: ${origin}`);
         return callback(null, true);
       }
-      
+
       callback(new Error(`Not allowed by CORS: ${origin}`));
     },
     credentials: true,
@@ -108,7 +113,7 @@ app.post('/api/webhooks/stripe', webhookController.handleStripeWebhook);
 
 // GET endpoint for webhook URL (for testing/verification)
 app.get('/api/webhooks/stripe', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Webhook endpoint is active. This endpoint only accepts POST requests from Stripe.',
     method: 'POST',
     url: '/api/webhooks/stripe'

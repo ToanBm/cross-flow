@@ -104,78 +104,78 @@ const InnerApp: React.FC = () => {
   const transferToken = Hooks.token.useTransferSync({
     mutation: {
       onSuccess: async (result: any) => {
-      // Extract txHash from result
-      const txHash =
-        result?.receipt?.transactionHash ||
-        result?.hash ||
-        result?.transactionHash ||
-        null;
+        // Extract txHash from result
+        const txHash =
+          result?.receipt?.transactionHash ||
+          result?.hash ||
+          result?.transactionHash ||
+          null;
 
-      // Log activity to backend
-      if (address && txHash) {
-        try {
-          await fetch('/api/activity-history/log', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              wallet_address: address,
-              activity_type: 'send',
-              token_address: TOKEN_ADDRESSES[selectedToken],
-              token_symbol: selectedToken,
-              amount: parseFloat(amount),
-              to_address: recipient.trim(),
-              from_address: address,
-              tx_hash: txHash,
-              status: 'success',
-              memo: memo || null,
-            }),
-          }).catch((err) => {
-            console.log('[Log activity] Error:', err);
-          });
-        } catch (err) {
-          console.log('[Log activity] Error:', err);
-        }
-      }
-
-      // Save recipient if checkbox is checked
-      if (saveRecipient && address && recipient) {
-        try {
-          const recipientAddress = recipient.trim();
-          if (recipientAddress.startsWith('0x') && recipientAddress.length === 42) {
-            await fetch('/api/recipients', {
+        // Log activity to backend
+        if (address && txHash) {
+          try {
+            await fetch('/api/activity-history/log', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                user_wallet_address: address,
-                recipient_address: recipientAddress,
+                wallet_address: address,
+                activity_type: 'send',
+                token_address: TOKEN_ADDRESSES[selectedToken],
+                token_symbol: selectedToken,
+                amount: parseFloat(amount),
+                to_address: recipient.trim(),
+                from_address: address,
+                tx_hash: txHash,
+                status: 'success',
+                memo: memo || null,
               }),
             }).catch((err) => {
-              // Silently fail if already exists
-              console.log('[Save recipient] Note:', err);
+              console.log('[Log activity] Error:', err);
             });
+          } catch (err) {
+            console.log('[Log activity] Error:', err);
           }
-        } catch (err) {
-          console.log('[Save recipient] Error:', err);
         }
-      }
 
-      setNotification({
-        msg: 'Transfer successful on Tempo',
-        type: 'success',
-      });
-      
-      // Clear form and reset checkbox
-      setAmount('');
-      setRecipient('');
-      setMemo('');
-      setSaveRecipient(false);
+        // Save recipient if checkbox is checked
+        if (saveRecipient && address && recipient) {
+          try {
+            const recipientAddress = recipient.trim();
+            if (recipientAddress.startsWith('0x') && recipientAddress.length === 42) {
+              await fetch('/api/recipients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  user_wallet_address: address,
+                  recipient_address: recipientAddress,
+                }),
+              }).catch((err) => {
+                // Silently fail if already exists
+                console.log('[Save recipient] Note:', err);
+              });
+            }
+          } catch (err) {
+            console.log('[Save recipient] Error:', err);
+          }
+        }
+
+        setNotification({
+          msg: 'Transfer successful on Tempo',
+          type: 'success',
+        });
+
+        // Clear form and reset checkbox
+        setAmount('');
+        setRecipient('');
+        setMemo('');
+        setSaveRecipient(false);
       },
       onError: (error: any) => {
-      console.error('[useTransferSync] error', error);
-      setNotification({
-        msg: error?.message || 'Failed to send payment on Tempo',
-        type: 'error',
-      });
+        console.error('[useTransferSync] error', error);
+        setNotification({
+          msg: error?.message || 'Failed to send payment on Tempo',
+          type: 'error',
+        });
       },
     },
   });
@@ -333,12 +333,14 @@ const InnerApp: React.FC = () => {
         if (resp.status === 404) return { recipients: [] };
         throw new Error('Failed to load recipients');
       }
-      return resp.json() as Promise<{ recipients: Array<{
-        id: number;
-        recipient_address?: string;
-        recipient_name?: string;
-        recipient_email?: string;
-      }> }>;
+      return resp.json() as Promise<{
+        recipients: Array<{
+          id: number;
+          recipient_address?: string;
+          recipient_name?: string;
+          recipient_email?: string;
+        }>
+      }>;
     },
     enabled: !!address && isRecipientsModalOpen,
     refetchInterval: false,
@@ -433,7 +435,7 @@ const InnerApp: React.FC = () => {
       } catch {
         // ignore
       }
-      
+
       // OTP is ONLY sent via email - never displayed in UI
       setNotification({
         msg:
@@ -441,7 +443,7 @@ const InnerApp: React.FC = () => {
           `OTP was sent to ${data.email}. Please check your inbox (including spam).`,
         type: 'success',
       });
-      
+
       setOtpRequested(true);
     } catch (error) {
       console.error('[handleSendOtp] error', error);
@@ -496,12 +498,12 @@ const InnerApp: React.FC = () => {
           const rows = (payload as any).bankAccounts as Array<any>;
           const mapped: BankAccount[] = Array.isArray(rows)
             ? rows.map((r) => ({
-                bankAccountId: r.bank_account_id,
-                connectedAccountId: r.connected_account_id,
-                currency: r.currency,
-                country: r.country,
-                accountHolderName: r.account_holder_name || '',
-              }))
+              bankAccountId: r.bank_account_id,
+              connectedAccountId: r.connected_account_id,
+              currency: r.currency,
+              country: r.country,
+              accountHolderName: r.account_holder_name || '',
+            }))
             : [];
           setBankAccounts(mapped);
         } else {
@@ -533,12 +535,12 @@ const InnerApp: React.FC = () => {
       const rows = (payload as any).bankAccounts as Array<any>;
       const mapped: BankAccount[] = Array.isArray(rows)
         ? rows.map((r) => ({
-            bankAccountId: r.bank_account_id,
-            connectedAccountId: r.connected_account_id,
-            currency: r.currency,
-            country: r.country,
-            accountHolderName: r.account_holder_name || '',
-          }))
+          bankAccountId: r.bank_account_id,
+          connectedAccountId: r.connected_account_id,
+          currency: r.currency,
+          country: r.country,
+          accountHolderName: r.account_holder_name || '',
+        }))
         : [];
       setBankAccounts(mapped);
     } catch {
@@ -587,7 +589,7 @@ const InnerApp: React.FC = () => {
 
     try {
       setIsLoading(true);
-      
+
       // Calculate fiat amount from stablecoin amount
       const stablecoinAmount = parseFloat(amount);
       const exchangeRate = exchangeRateData?.rate || 1.0;
@@ -612,7 +614,7 @@ const InnerApp: React.FC = () => {
         throw new Error(data.error || 'Failed to create payment intent');
       }
 
-       // Bước 2: confirm payment với Stripe bằng card user nhập
+      // Bước 2: confirm payment với Stripe bằng card user nhập
       const { clientSecret, paymentIntentId } = data;
       const { error, paymentIntent } = await stripe.confirmCardPayment(
         clientSecret,
@@ -952,33 +954,33 @@ const InnerApp: React.FC = () => {
           transactions={
             activityData?.activities
               ? activityData.activities.map((act: any) => ({
-                  id: act.id.toString(),
-                  type:
-                    act.activity_type === 'send'
-                      ? 'send'
-                      : act.activity_type === 'deposit'
-                        ? 'deposit'
-                        : act.activity_type === 'withdraw'
-                          ? 'withdraw'
-                          : 'receive',
-                  amount: parseFloat(act.amount || '0'),
-                  currency: (act.token_symbol || act.currency || 'USD') as 'USD' | 'USDC',
-                  counterparty:
-                    act.activity_type === 'send'
-                      ? act.to_address
-                        ? `${act.to_address.slice(0, 6)}...${act.to_address.slice(-4)}`
-                        : 'Unknown'
-                      : act.activity_type === 'deposit'
-                        ? 'Card Payment'
-                        : act.activity_type === 'withdraw'
-                          ? 'Bank Account'
-                          : act.from_address
-                            ? `${act.from_address.slice(0, 6)}...${act.from_address.slice(-4)}`
-                            : 'Unknown',
-                  date: new Date(act.created_at).toLocaleString(),
-                  status: act.status || 'completed',
-                  txHash: act.tx_hash || null,
-                }))
+                id: act.id.toString(),
+                type:
+                  act.activity_type === 'send'
+                    ? 'send'
+                    : act.activity_type === 'deposit'
+                      ? 'deposit'
+                      : act.activity_type === 'withdraw'
+                        ? 'withdraw'
+                        : 'receive',
+                amount: parseFloat(act.amount || '0'),
+                currency: (act.token_symbol || act.currency || 'USD') as 'USD' | 'USDC',
+                counterparty:
+                  act.activity_type === 'send'
+                    ? act.to_address
+                      ? `${act.to_address.slice(0, 6)}...${act.to_address.slice(-4)}`
+                      : 'Unknown'
+                    : act.activity_type === 'deposit'
+                      ? 'Card Payment'
+                      : act.activity_type === 'withdraw'
+                        ? 'Bank Account'
+                        : act.from_address
+                          ? `${act.from_address.slice(0, 6)}...${act.from_address.slice(-4)}`
+                          : 'Unknown',
+                date: new Date(act.created_at).toLocaleString(),
+                status: act.status || 'completed',
+                txHash: act.tx_hash || null,
+              }))
               : [] // Empty array instead of mock data
           }
           lifetimeVolume={lifetimeVolume}
